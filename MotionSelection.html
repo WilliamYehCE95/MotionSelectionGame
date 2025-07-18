@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motion System Evaluation Game</title>
+    <!-- Tailwind CSS CDN for basic layout and responsive utilities -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /*
+        Custom CSS for the game elements to match the desired toggle switch look.
+        Using 'Inter' font for a clean, modern aesthetic.
+        */
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Ensure the body takes at least the full viewport height */
+            background-color: #f0f4f8; /* Light background for the page */
+            margin: 0;
+            padding: 20px; /* Add some padding around the game area */
+            box-sizing: border-box; /* Include padding in element's total width and height */
+        }
+
+        .game-container {
+            background-color: #ffffff; /* White background for the game area */
+            border-radius: 1.5rem; /* Rounded corners for the container */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+            padding: 2.5rem; /* Generous padding inside the container */
+            text-align: center;
+            max-width: 90%; /* Max width for responsiveness */
+            width: 500px; /* Fixed width for larger screens to keep it compact */
+        }
+
+        .switch-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between; /* Space out the toggle and the text */
+            margin-bottom: 0.375rem; /* Reduced by 50% from 0.75rem */
+            padding: 0.75rem 0; /* Vertical padding for each item */
+        }
+
+        .switch-label {
+            font-size: 1.5rem; /* Larger font size for the label */
+            font-weight: bold;
+            color: #2d3748; /* Dark text color */
+            text-transform: uppercase; /* Uppercase text as in the example image */
+            margin-right: 1rem; /* Space between label and toggle */
+            user-select: none; /* Prevent text selection */
+        }
+
+        /* Custom Toggle Switch Styles */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px; /* Width of the toggle track */
+            height: 34px; /* Height of the toggle track */
+            cursor: pointer;
+            border-radius: 34px; /* Rounded track */
+            transition: background-color 0.3s ease-in-out;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1); /* Inner shadow for depth */
+        }
+
+        .toggle-switch .slider {
+            position: absolute;
+            content: "";
+            height: 26px; /* Height of the slider thumb */
+            width: 26px; /* Width of the slider thumb */
+            left: 4px; /* Initial position for the thumb */
+            bottom: 4px; /* Initial position for the thumb */
+            background-color: white; /* White thumb */
+            border-radius: 50%; /* Circular thumb */
+            transition: transform 0.3s ease-in-out;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Shadow for the thumb */
+        }
+
+        /* Default (OFF) state colors */
+        .toggle-switch.off {
+            background-color: #cbd5e0; /* Light grey for OFF state */
+        }
+
+        /* ON state colors - dynamic based on option */
+        /* New colors for the specific options */
+        .toggle-switch.on.precision {
+            background-color: #38a169; /* Green */
+        }
+        .toggle-switch.on.load-capacity {
+            background-color: #63b3ed; /* Light Blue */
+        }
+        .toggle-switch.on.travel-range {
+            background-color: #a0aec0; /* Grey */
+        }
+        .toggle-switch.on.size {
+            background-color: #f6ad55; /* Orange */
+        }
+        .toggle-switch.on.cost {
+            background-color: #e53e3e; /* Red */
+        }
+        .toggle-switch.on.lead-time {
+            background-color: #805ad5; /* Purple */
+        }
+
+        /* Slider position for ON state */
+        .toggle-switch.on .slider {
+            transform: translateX(26px); /* Move slider to the right */
+        }
+
+        /* Disabled state for the entire switch item */
+        .switch-item.disabled .toggle-switch {
+            cursor: not-allowed;
+            opacity: 0.6; /* Fade out disabled switches */
+        }
+        .switch-item.disabled .switch-label {
+            color: #a0aec0; /* Fade out disabled labels */
+        }
+
+
+        .message-box {
+            min-height: 40px; /* Ensure message box has a minimum height */
+            margin-top: 1.5rem;
+            font-size: 1.1rem;
+            color: #2d3748; /* Dark text for messages */
+            font-weight: 500;
+        }
+
+        .reset-button {
+            background-color: #4299e1; /* Blue button */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 1.5rem;
+        }
+
+        .reset-button:hover {
+            background-color: #3182ce; /* Darker blue on hover */
+            transform: translateY(-1px); /* Slight lift on hover */
+        }
+
+        .reset-button:active {
+            transform: translateY(0); /* Press effect */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .game-container {
+                padding: 1.5rem;
+            }
+            .switch-label {
+                font-size: 1.25rem;
+            }
+            .toggle-switch {
+                width: 50px;
+                height: 28px;
+            }
+            .toggle-switch .slider {
+                height: 22px;
+                width: 22px;
+                left: 3px;
+                bottom: 3px;
+            }
+            .toggle-switch.on .slider {
+                transform: translateX(22px);
+            }
+            .message-box {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="text-3xl font-extrabold text-gray-800 mb-4">Motion System Evaluation Game</h1>
+        <p class="text-gray-600 mb-6">Challenge yourself to evaluating the best possible motion systems.</p>
+
+        <div id="messageBox" class="message-box"></div>
+
+        <div id="switchesContainer">
+            <!-- Switches will be dynamically generated here by JavaScript -->
+        </div>
+
+        <button id="resetButton" class="reset-button">Reset</button>
+    </div>
+
+    <script>
+        // --- Game Configuration ---
+        // Define the options for the game. Each option has an ID, a label, and a color class for its ON state.
+        const OPTIONS = [
+            { id: 'precision', label: 'PRECISION', colorClass: 'precision' },
+            { id: 'load-capacity', label: 'LOAD CAPACITY', colorClass: 'load-capacity' },
+            { id: 'travel-range', label: 'TRAVEL RANGE', colorClass: 'travel-range' },
+            { id: 'size', label: 'SIZE', colorClass: 'size' },
+            { id: 'cost', label: 'COST', colorClass: 'cost' },
+            { id: 'lead-time', label: 'LEAD TIME', colorClass: 'lead-time' },
+        ];
+
+        const MAX_ACTIVE_OPTIONS = 2; // The maximum number of options that can be simultaneously ON.
+
+        // --- DOM Elements ---
+        const switchesContainer = document.getElementById('switchesContainer');
+        const messageBox = document.getElementById('messageBox');
+        const resetButton = document.getElementById('resetButton');
+
+        // --- Game State ---
+        let switchStates = {}; // Stores the current ON/OFF state for each switch: { 'id': true/false }
+        let activeSwitchesOrder = []; // Stores the IDs of switches that are ON, in the order they were turned ON.
+                                      // Used to determine which switch to turn OFF if MAX_ACTIVE_OPTIONS is exceeded.
+
+        // --- Function: Initialize the Game ---
+        function initializeGame() {
+            switchesContainer.innerHTML = ''; // Clear previous switches
+            switchStates = {}; // Reset all switch states
+            activeSwitchesOrder = []; // Clear the order of active switches
+            messageBox.textContent = 'Please select your options.';
+
+            // Create and append switch elements
+            OPTIONS.forEach(option => {
+                const switchItem = document.createElement('div');
+                switchItem.classList.add('switch-item');
+                switchItem.dataset.id = option.id; // Store the option ID on the parent element
+
+                const switchLabel = document.createElement('span');
+                switchLabel.classList.add('switch-label');
+                switchLabel.textContent = option.label;
+
+                const toggleSwitch = document.createElement('div');
+                toggleSwitch.classList.add('toggle-switch', 'off'); // Default to OFF state
+                toggleSwitch.dataset.id = option.id; // Store ID on the toggle itself for event handling
+                toggleSwitch.dataset.colorClass = option.colorClass; // Store color class for dynamic styling
+
+                const slider = document.createElement('div');
+                slider.classList.add('slider');
+
+                toggleSwitch.appendChild(slider);
+                switchItem.appendChild(switchLabel);
+                switchItem.appendChild(toggleSwitch);
+                switchesContainer.appendChild(switchItem);
+
+                // Initialize state for this switch to OFF
+                switchStates[option.id] = false;
+
+                // Add event listener to the toggle switch
+                toggleSwitch.addEventListener('click', handleToggleClick);
+            });
+        }
+
+        // --- Function: Update Switch Visuals ---
+        function updateSwitchVisuals(id) {
+            const toggleSwitchElement = switchesContainer.querySelector(`.toggle-switch[data-id="${id}"]`);
+            const switchItemElement = switchesContainer.querySelector(`.switch-item[data-id="${id}"]`);
+            const colorClass = toggleSwitchElement.dataset.colorClass;
+
+            if (switchStates[id]) { // If the switch is ON
+                toggleSwitchElement.classList.remove('off');
+                toggleSwitchElement.classList.add('on', colorClass);
+                switchItemElement.classList.remove('disabled'); // Ensure it's not disabled
+            } else { // If the switch is OFF
+                toggleSwitchElement.classList.remove('on', colorClass);
+                toggleSwitchElement.classList.add('off');
+                // Don't add 'disabled' class here, as it's handled by the rule enforcement
+            }
+        }
+
+        // --- Function: Handle Toggle Click ---
+        function handleToggleClick(event) {
+            const clickedId = event.currentTarget.dataset.id;
+            const isCurrentlyOn = switchStates[clickedId];
+
+            if (isCurrentlyOn) {
+                // If it's currently ON, turn it OFF
+                switchStates[clickedId] = false;
+                // Remove from activeSwitchesOrder
+                activeSwitchesOrder = activeSwitchesOrder.filter(id => id !== clickedId);
+            } else {
+                // If it's currently OFF, try to turn it ON
+                if (activeSwitchesOrder.length >= MAX_ACTIVE_OPTIONS) {
+                    // If max active options reached, turn off the oldest active switch
+                    const oldestActiveId = activeSwitchesOrder.shift(); // Get and remove the oldest
+                    switchStates[oldestActiveId] = false; // Turn it off
+                    updateSwitchVisuals(oldestActiveId); // Update its visual
+                    messageBox.textContent = `You chose "${OPTIONS.find(o => o.id === clickedId).label}", so "${OPTIONS.find(o => o.id === oldestActiveId).label}" was turned off.`;
+                } else {
+                     messageBox.textContent = `You chose "${OPTIONS.find(o => o.id === clickedId).label}".`;
+                }
+                switchStates[clickedId] = true; // Turn the clicked switch ON
+                activeSwitchesOrder.push(clickedId); // Add to the end of the active order
+            }
+
+            updateSwitchVisuals(clickedId); // Update the visual for the clicked switch
+            updateOverallMessage(); // Update the message based on current active switches
+        }
+
+        // --- Function: Update Overall Message ---
+        function updateOverallMessage() {
+            const activeLabels = activeSwitchesOrder.map(id => OPTIONS.find(o => o.id === id).label);
+            if (activeLabels.length === 0) {
+                messageBox.textContent = 'Please select your options.';
+            } else if (activeLabels.length === 1) {
+                messageBox.textContent = `You currently selected: ${activeLabels[0]}.`;
+            } else {
+                messageBox.textContent = `You currently selected: ${activeLabels.join(' and ')}.`;
+            }
+        }
+
+        // --- Event Listener for Reset Button ---
+        resetButton.addEventListener('click', initializeGame);
+
+        // --- Initial Game Setup on Load ---
+        window.onload = initializeGame;
+    </script>
+</body>
+</html>
